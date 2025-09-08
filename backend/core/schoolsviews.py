@@ -6,12 +6,12 @@ from .serializers import SchoolSerializer
 class SchoolListView(generics.ListAPIView):
     queryset = School.objects.filter(is_active=True)
     serializer_class = SchoolSerializer
-    permission_classes = []  # Public access
+    permission_classes = []  
 
 class SchoolDetailView(generics.RetrieveAPIView):
     queryset = School.objects.filter(is_active=True)
     serializer_class = SchoolSerializer
-    permission_classes = []  # Public access
+    permission_classes = [] 
 
 class SchoolManagementView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAdminUser]
