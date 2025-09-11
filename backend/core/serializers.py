@@ -90,9 +90,11 @@ class ShipmentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PaymentSerializer(serializers.ModelSerializer):
+    order_code = serializers.CharField(source='order.order_code', read_only=True)
+    
     class Meta:
         model = Payment
-        fields = '__all__'
+        fields = ('id', 'order', 'order_code', 'amount', 'method', 'transaction_id', 'status', 'created_at', 'updated_at')
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

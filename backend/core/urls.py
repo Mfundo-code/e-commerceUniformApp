@@ -20,6 +20,12 @@ urlpatterns = [
     path('measurements/template/', measurementviews.MeasurementTemplateView.as_view(), name='measurement-template'),
     path('tailor/confirm-order/<str:confirmation_token>/', orderviews.TailorOrderConfirmationView.as_view(), name='tailor-confirm-order'),
     
+    # Payment endpoints
+    path('payments/initiate/', paymentviews.PaymentInitiateView.as_view(), name='payment-initiate'),
+    path('payments/execute/', paymentviews.PaymentExecuteView.as_view(), name='payment-execute'),
+    path('payments/status/', paymentviews.PaymentStatusView.as_view(), name='payment-status'),
+    path('payments/webhook/', paymentviews.PaymentWebhookView.as_view(), name='payment-webhook'),
+    
     # Tailor endpoints
     path('tailor/orders/', tailorviews.TailorOrderListView.as_view(), name='tailor-orders'),
     path('tailor/orders/<int:id>/status/', tailorviews.TailorOrderUpdateView.as_view(), name='tailor-order-update'),
@@ -27,10 +33,6 @@ urlpatterns = [
     # Delivery endpoints
     path('delivery/shipments/', deliveryviews.DeliveryShipmentListView.as_view(), name='delivery-shipments'),
     path('delivery/shipments/<int:id>/status/', deliveryviews.DeliveryShipmentUpdateView.as_view(), name='delivery-shipment-update'),
-    
-    # Payment endpoints
-    path('payments/initiate/', paymentviews.PaymentInitiateView.as_view(), name='payment-initiate'),
-    path('payments/webhook/', paymentviews.PaymentWebhookView.as_view(), name='payment-webhook'),
     
     # Super Admin endpoints
     path('admin/products/', productsviews.ProductCreateView.as_view(), name='product-create'),

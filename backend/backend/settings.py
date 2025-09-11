@@ -106,3 +106,9 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'your-email@gmail.com'  # Replace with your email
 EMAIL_HOST_PASSWORD = 'your-app-password'  # Replace with your app password
 DEFAULT_FROM_EMAIL = 'your-email@gmail.com'  # Replace with your email
+
+
+# PayPal configuration
+PAYPAL_MODE = "sandbox"  # sandbox or live
+PAYPAL_CLIENT_ID = "your-paypal-client-id"
+PAYPAL_CLIENT_SECRET = "your-paypal-client-secret"

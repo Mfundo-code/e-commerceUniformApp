@@ -239,9 +239,14 @@ class Shipment(models.Model):
         return f"Shipment for {self.order.order_code if self.order else 'No Order'}"
 
 class Payment(models.Model):
+    PAYMENT_METHODS = (
+        ('paypal', 'PayPal'),
+        # Add other methods if needed
+    )
+    
     order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    method = models.CharField(max_length=50, null=True, blank=True)
+    method = models.CharField(max_length=50, choices=PAYMENT_METHODS, default='paypal')
     transaction_id = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)

@@ -8,6 +8,14 @@ from django.conf import settings
 from django.utils import timezone
 from .models import Order, School, TailorProfile
 from .serializers import OrderCreateSerializer, OrderSerializer
+import paypalrestsdk
+
+# Configure PayPal SDK
+paypalrestsdk.configure({
+    "mode": settings.PAYPAL_MODE,
+    "client_id": settings.PAYPAL_CLIENT_ID,
+    "client_secret": settings.PAYPAL_CLIENT_SECRET
+})
 
 class GuestCheckoutView(generics.CreateAPIView):
     queryset = Order.objects.all()
@@ -23,14 +31,108 @@ class GuestCheckoutView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
         
-        # Assign order to closest tailor and send email
-        self.assign_order_to_tailor(order)
+        # Create PayPal payment
+        payment = paypalrestsdk.Payment({
+            "intent": "sale",
+            "payer": {
+                "payment_method": "paypal"
+            },
+            "redirect_urls": {
+                "return_url": f"{settings.FRONTEND_URL}/payment/success/",
+                "cancel_url": f"{settings.FRONTEND_URL}/payment/cancel/"
+            },
+            "transactions": [{
+                "amount": {
+                    "total": str(order.total_amount),
+                    "currency": "USD"
+                },
+                "description": f"Payment for order {order.order_code}",
+                "custom": str(order.id)  # Store order ID in custom field
+            }]
+        })
         
-        # Send confirmation email to customer
-        self.send_customer_confirmation(order)
+        if payment.create():
+            # Find approval URL
+            for link in payment.links:
+                if link.rel == "approval_url":
+                    approval_url = link.href
+                    
+                    # Return payment information instead of assigning tailor immediately
+                    response_data = {
+                        "order_id": order.id,
+                        "order_code": order.order_code,
+                        "total_amount": str(order.total_amount),
+                        "payment_id": payment.id,
+                        "approval_url": approval_url,
+                        "message": "Order created successfully. Please complete payment."
+                    }
+                    
+                    headers = self.get_success_headers(serializer.data)
+                    return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
         
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        # If payment creation fails
+        return Response(
+            {"error": "Failed to create payment. Please try again."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+class PaymentSuccessView(generics.UpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    
+    def update(self, request, *args, **kwargs):
+        payment_id = request.data.get('paymentID')
+        payer_id = request.data.get('payerID')
+        order_id = request.data.get('orderID')
+        
+        try:
+            # Find the payment
+            payment = paypalrestsdk.Payment.find(payment_id)
+            
+            # Execute payment
+            if payment.execute({"payer_id": payer_id}):
+                # Get the order
+                order = Order.objects.get(id=order_id)
+                
+                # Update order status
+                order.status = 'confirmed'
+                order.save()
+                
+                # Create payment record
+                from .models import Payment
+                Payment.objects.create(
+                    order=order,
+                    amount=order.total_amount,
+                    method='paypal',
+                    transaction_id=payment_id,
+                    status='completed'
+                )
+                
+                # Assign order to tailor and send notifications
+                self.assign_order_to_tailor(order)
+                self.send_customer_confirmation(order)
+                
+                return Response({
+                    "status": "Payment completed successfully.",
+                    "order_code": order.order_code,
+                    "message": "Order confirmed and assigned to a tailor."
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"error": "Payment execution failed."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Order not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     
     def assign_order_to_tailor(self, order):
         """Find the closest tailor and assign the order to them"""
@@ -45,27 +147,24 @@ class GuestCheckoutView(generics.CreateAPIView):
         )
         
         if tailors.exists():
-            # For simplicity, we'll just take the first tailor
             # In a real implementation, you would use geolocation to find the closest one
             tailor = tailors.first()
             
-            # Generate confirmation token
+          
             confirmation_token = order.generate_confirmation_token()
             
-            # Set deadline (7 days from now)
             order.set_deadline()
             
-            # Send email to tailor
+     
             self.send_tailor_notification(order, tailor, confirmation_token)
             
-            # Update order with assigned tailor
+           
             order.tailor = tailor.user
             order.assigned_at = timezone.now()
             order.save()
             
         else:
-            # If no tailor is found, you might want to notify admin
-            # or handle this case differently
+            
             pass
     
     def send_tailor_notification(self, order, tailor, confirmation_token):
@@ -110,7 +209,7 @@ class GuestCheckoutView(generics.CreateAPIView):
         message = f'''
         Hello {order.customer_name},
         
-        Thank you for your order. Your order has been received and is being processed.
+        Thank you for your order. Your payment has been received and your order is being processed.
         
         Order Details:
         - Order Code: {order.order_code}
@@ -132,6 +231,28 @@ class GuestCheckoutView(generics.CreateAPIView):
             fail_silently=False,
         )
 
+class PaymentCancelView(generics.UpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    
+    def update(self, request, *args, **kwargs):
+        order_id = request.data.get('orderID')
+        
+        try:
+            order = Order.objects.get(id=order_id)
+            order.status = 'cancelled'
+            order.save()
+            
+            return Response({
+                "message": "Payment cancelled. Order has been cancelled."
+            }, status=status.HTTP_200_OK)
+            
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Order not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 class OrderLookupView(generics.RetrieveAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -147,9 +268,9 @@ class TailorOrderConfirmationView(generics.UpdateAPIView):
         order = self.get_object()
         
         # Check if the order is already confirmed
-        if order.status != 'pending':
+        if order.status != 'confirmed':
             return Response(
-                {"error": "This order has already been confirmed."},
+                {"error": "This order has already been confirmed or is not in the correct state."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -160,8 +281,8 @@ class TailorOrderConfirmationView(generics.UpdateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Update order status to confirmed
-        order.status = 'confirmed'
+        # Update order status to in_production
+        order.status = 'in_production'
         order.confirmation_token = None  # Clear the token after confirmation
         order.save()
         
