@@ -1,0 +1,25 @@
+/* src/components/SchoolList.css */
+.school-list h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.school-card {
+  text-align: center;
+  transition: transform 0.3s;
+}
+
+.school-card:hover {
+  transform: translateY(-5px);
+}
+
+.school-card h3 {
+  color: #007bff;
+  margin-bottom: 10px;
+}
+
+.school-card p {
+  color: #666;
+  margin-bottom: 20px;
+}

@@ -1,0 +1,85 @@
+/* src/components/OrderStatus.css */
+.search-form {
+  max-width: 500px;
+  margin: 0 auto 30px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.status-pending {
+  background: #ffc107;
+  color: #000;
+}
+
+.status-confirmed {
+  background: #17a2b8;
+  color: #fff;
+}
+
+.status-production {
+  background: #fd7e14;
+  color: #fff;
+}
+
+.status-completed {
+  background: #28a745;
+  color: #fff;
+}
+
+.status-shipped {
+  background: #007bff;
+  color: #fff;
+}
+
+.status-delivered {
+  background: #6f42c1;
+  color: #fff;
+}
+
+.status-cancelled {
+  background: #dc3545;
+  color: #fff;
+}
+
+.customer-info,
+.order-items,
+.order-total,
+.tailor-info,
+.deadline {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.order-item {
+  margin-bottom: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.order-item:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .order-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+}

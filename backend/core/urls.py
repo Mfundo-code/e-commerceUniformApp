@@ -1,6 +1,5 @@
-# core/urls.py
 from django.urls import path
-from . import userviews, tailorviews, deliveryviews, paymentviews, orderviews, schoolsviews, productsviews, measurementviews
+from . import userviews, tailorviews, deliveryviews, paymentviews, orderviews, schoolsviews, productsviews, measurementviews, cartviews
 
 urlpatterns = [
     # Authentication
@@ -25,6 +24,12 @@ urlpatterns = [
     path('payments/execute/', paymentviews.PaymentExecuteView.as_view(), name='payment-execute'),
     path('payments/status/', paymentviews.PaymentStatusView.as_view(), name='payment-status'),
     path('payments/webhook/', paymentviews.PaymentWebhookView.as_view(), name='payment-webhook'),
+    
+    # Cart endpoints
+    path('cart/', cartviews.CartView.as_view(), name='cart-detail'),
+    path('cart/add/', cartviews.AddToCartView.as_view(), name='add-to-cart'),
+    path('cart/update/<int:pk>/', cartviews.UpdateCartItemView.as_view(), name='update-cart-item'),
+    path('cart/remove/<int:pk>/', cartviews.RemoveFromCartView.as_view(), name='remove-from-cart'),
     
     # Tailor endpoints
     path('tailor/orders/', tailorviews.TailorOrderListView.as_view(), name='tailor-orders'),

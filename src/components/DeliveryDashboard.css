@@ -1,0 +1,81 @@
+/* src/components/DeliveryDashboard.css */
+.delivery-dashboard h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.no-shipments {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 18px;
+}
+
+.shipments-list {
+  display: grid;
+  gap: 20px;
+}
+
+.shipment-card {
+  border-left: 4px solid #28a745;
+}
+
+.shipment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.status {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.status-assigned {
+  background: #17a2b8;
+  color: white;
+}
+
+.status-picked_up {
+  background: #fd7e14;
+  color: white;
+}
+
+.status-in_transit {
+  background: #007bff;
+  color: white;
+}
+
+.status-delivered {
+  background: #28a745;
+  color: white;
+}
+
+.shipment-details {
+  margin-bottom: 15px;
+}
+
+.shipment-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.status-select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+@media (max-width: 768px) {
+  .shipment-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+}

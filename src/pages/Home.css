@@ -1,0 +1,445 @@
+/* src/pages/Home.css (updated — reduced hero & product heights) */
+.home {
+  overflow-x: hidden;
+}
+
+.hero {
+  background: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+  background-size: cover;
+  background-position: center;
+  color: white;
+  /* reduced vertical padding and min-height */
+  padding: 60px 20px;
+  text-align: center;
+  min-height: 50vh; /* was 70vh */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-content p {
+  font-size: 1.5rem;
+  margin-bottom: 30px; /* slightly reduced */
+  opacity: 0.9;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.order-now-btn {
+  background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+  color: white;
+  border: none;
+  padding: 16px 36px; /* slightly reduced */
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.order-now-btn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #13855c 0%, #1cc88a 100%);
+}
+
+.featured-products {
+  padding: 80px 20px;
+  background: #f8f9fc;
+}
+
+.featured-products h2 {
+  text-align: center;
+  margin-bottom: 50px;
+  color: var(--text-primary);
+  position: relative;
+}
+
+.featured-products h2:after {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: var(--gradient-primary);
+  margin: 15px auto 0;
+  border-radius: 2px;
+}
+
+.carousel-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.carousel {
+  overflow: hidden;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* reduced padding inside slides so overall height is shorter */
+.products-slide {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px; /* slightly smaller gap */
+  padding: 20px; /* reduced from 30px */
+  transition: transform 0.5s ease;
+}
+
+.loading-slide,
+.empty-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px; /* slightly smaller */
+  padding: 40px;
+  grid-column: 1 / -1;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.product-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  /* make cards more compact */
+  min-height: 100%; 
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+/* main change: make images shorter */
+.product-image {
+  width: 100%;
+  height: 150px; /* reduced from 200px */
+  object-fit: cover;
+}
+
+.product-image-placeholder {
+  width: 100%;
+  height: 150px; /* reduced to match */
+  background: linear-gradient(135deg, #f8f9fc 0%, #e2e6f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c2c8d6;
+  font-size: 2.5rem; /* reduced icon size a bit */
+}
+
+.product-info {
+  padding: 14px; /* slightly reduced */
+  flex-grow: 1;
+}
+
+.product-info h4 {
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  font-size: 1.1rem; /* slightly smaller */
+}
+
+.school-name {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+.price {
+  color: var(--success);
+  font-weight: bold;
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+/* make the order button slightly smaller vertically */
+.order-btn {
+  width: 100%;
+  padding: 10px; /* reduced from 12px */
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-size: 0.98rem;
+}
+
+.order-btn:hover {
+  background: linear-gradient(135deg, #224abe 0%, #4e73df 100%);
+}
+
+.carousel-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 24px; /* slightly reduced */
+  gap: 20px;
+}
+
+.control-btn {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(78, 115, 223, 0.3);
+}
+
+.control-btn:hover {
+  background: linear-gradient(135deg, #224abe 0%, #4e73df 100%);
+  transform: scale(1.1);
+}
+
+.carousel-dots {
+  display: flex;
+  gap: 12px;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: none;
+  background: #ddd;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.dot.active {
+  background: var(--primary);
+  transform: scale(1.2);
+}
+
+.how-it-works {
+  padding: 80px 20px;
+  background: white;
+}
+
+.how-it-works h2 {
+  text-align: center;
+  margin-bottom: 60px;
+  color: var(--text-primary);
+  position: relative;
+}
+
+.how-it-works h2:after {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: var(--gradient-secondary);
+  margin: 15px auto 0;
+  border-radius: 2px;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.step {
+  text-align: center;
+  padding: 40px 25px;
+  border-radius: 12px;
+  background: #f8f9fc;
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.step:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: var(--gradient-primary);
+}
+
+.step:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.step:nth-child(2):before {
+  background: var(--gradient-secondary);
+}
+
+.step:nth-child(3):before {
+  background: var(--gradient-accent);
+}
+
+.step:nth-child(4):before {
+  background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+}
+
+.step-icon {
+  width: 80px;
+  height: 80px;
+  background: var(--gradient-primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 25px;
+  font-size: 2rem;
+}
+
+.step:nth-child(2) .step-icon {
+  background: var(--gradient-secondary);
+}
+
+.step:nth-child(3) .step-icon {
+  background: var(--gradient-accent);
+}
+
+.step:nth-child(4) .step-icon {
+  background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+}
+
+.step h3 {
+  margin-bottom: 15px;
+  color: var(--text-primary);
+  font-size: 1.3rem;
+}
+
+.step p {
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .products-slide {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .hero-content h1 {
+    font-size: 2.5rem;
+  }
+  
+  .hero-content p {
+    font-size: 1.3rem;
+  }
+  
+  .order-now-btn {
+    padding: 14px 32px;
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .products-slide {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 16px;
+  }
+  
+  .steps {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  
+  .hero {
+    padding: 60px 20px;
+    min-height: 45vh; /* keep hero smaller on tablet */
+  }
+  
+  .hero-content h1 {
+    font-size: 2.2rem;
+  }
+  
+  .hero-content p {
+    font-size: 1.1rem;
+  }
+  
+  .product-image,
+  .product-image-placeholder {
+    height: 140px; /* slightly smaller on tablet */
+  }
+}
+
+@media (max-width: 576px) {
+  .products-slide {
+    grid-template-columns: 1fr;
+  }
+  
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+  
+  .order-now-btn {
+    padding: 12px 30px;
+    font-size: 1rem;
+  }
+  
+  .carousel-controls {
+    gap: 20px;
+  }
+  
+  .control-btn {
+    width: 45px;
+    height: 45px;
+  }
+
+  .product-image,
+  .product-image-placeholder {
+    height: 120px; /* smaller on phones */
+  }
+
+  .product-info {
+    padding: 12px;
+  }
+
+  .product-info h4 {
+    font-size: 1rem;
+  }
+}

@@ -1,6 +1,5 @@
-# core/serializers.py
 from rest_framework import serializers
-from .models import School, Product, Order, OrderLine, TailorProfile, DeliveryPartnerProfile, Shipment, Payment
+from .models import School, Product, Order, OrderLine, TailorProfile, DeliveryPartnerProfile, Shipment, Payment, Cart, CartItem
 from django.contrib.auth.models import User
 import random
 import string
@@ -44,7 +43,7 @@ class OrderSerializer(serializers.ModelSerializer):
 class OrderLineCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderLine
-        fields = ('product', 'quantity', 'price', 'measurements')
+        fields = ('product', 'quantity', 'price', 'measurements', 'student_name', 'student_age', 'student_grade', 'student_gender', 'student_height')
     
     def validate_measurements(self, value):
         # You could add validation here based on the product's garment type
@@ -69,6 +68,31 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             OrderLine.objects.create(order=order, **line_data)
         
         return order
+
+class CartItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.school.name', read_only=True)
+    garment_type = serializers.CharField(source='product.garment_type', read_only=True)
+    garment_type_display = serializers.CharField(source='product.get_garment_type_display', read_only=True)
+    price = serializers.DecimalField(source='product.price', read_only=True, max_digits=10, decimal_places=2)
+    total = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CartItem
+        fields = '__all__'
+    
+    def get_total(self, obj):
+        return obj.get_total()
+
+class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True, read_only=True)
+    total = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Cart
+        fields = '__all__'
+    
+    def get_total(self, obj):
+        return obj.get_total()
 
 class TailorProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

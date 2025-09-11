@@ -1,0 +1,119 @@
+/* src/components/SchoolSearch.css */
+.school-search {
+  padding: 2rem 0;
+}
+
+.search-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.search-header h2 {
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.search-header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.search-box {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 1rem 3rem 1rem 1.5rem;
+  border: 2px solid var(--border-color);
+  border-radius: 50px;
+  font-size: 1rem;
+  transition: all 0.3s;
+  box-shadow: var(--shadow);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.search-icon {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.schools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.school-card {
+  background: var(--white);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  transition: all 0.3s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 2px solid transparent;
+}
+
+.school-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
+}
+
+.school-info h3 {
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.school-info p {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.select-school {
+  text-align: right;
+}
+
+.loading-schools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+.loading-schools .spinner {
+  margin-bottom: 1rem;
+}
+
+.no-results {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .schools-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .search-input {
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+  }
+  
+  .search-icon {
+    right: 1rem;
+  }
+}

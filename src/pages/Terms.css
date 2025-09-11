@@ -1,0 +1,31 @@
+/* src/pages/Terms.css */
+.terms-page {
+  padding: 40px 20px;
+}
+
+.terms-page h1 {
+  text-align: center;
+  margin-bottom: 40px;
+  color: #333;
+}
+
+.terms-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.terms-content section {
+  margin-bottom: 30px;
+}
+
+.terms-content h2 {
+  color: #007bff;
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+.terms-content p {
+  margin-bottom: 15px;
+  line-height: 1.6;
+  color: #555;
+}

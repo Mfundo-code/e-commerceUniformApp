@@ -1,4 +1,3 @@
-# core/orderviews.py
 from rest_framework import generics, status
 from rest_framework.response import Response
 import random
@@ -6,7 +5,16 @@ import string
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
-from .models import Order, School, TailorProfile
+from .models import (
+    Order,
+    School,
+    TailorProfile,
+    Cart,
+    CartItem,
+    OrderLine,  
+    Payment      
+)
+
 from .serializers import OrderCreateSerializer, OrderSerializer
 import paypalrestsdk
 
@@ -23,13 +31,52 @@ class GuestCheckoutView(generics.CreateAPIView):
     permission_classes = []  # Allow anyone to create orders
     
     def create(self, request, *args, **kwargs):
+        # Get the cart
+        session_key = request.session.session_key
+        try:
+            cart = Cart.objects.get(session_key=session_key)
+        except Cart.DoesNotExist:
+            return Response(
+                {"error": "Cart not found. Please add items to your cart first."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if cart.items.count() == 0:
+            return Response(
+                {"error": "Your cart is empty. Please add items to your cart first."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         # Generate unique order code
         order_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
         request.data['order_code'] = order_code
         
+        # Calculate total from cart
+        request.data['total_amount'] = cart.get_total()
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
+        
+        # Move cart items to order lines
+        for cart_item in cart.items.all():
+            OrderLine.objects.create(
+                order=order,
+                product=cart_item.product,
+                quantity=cart_item.quantity,
+                price=cart_item.product.price,
+                measurements=cart_item.measurements,
+                # Add student information to order line
+                student_name=cart_item.student_name,
+                student_age=cart_item.student_age,
+                student_grade=cart_item.student_grade,
+                student_gender=cart_item.student_gender,
+                student_height=cart_item.student_height
+            )
+        
+        # Clear the cart
+        cart.items.all().delete()
+        cart.delete()
         
         # Create PayPal payment
         payment = paypalrestsdk.Payment({

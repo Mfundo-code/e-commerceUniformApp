@@ -1,4 +1,3 @@
-# core/models.py
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -42,6 +41,40 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.school.name} - {self.get_garment_type_display()}"
 
+class Cart(models.Model):
+    session_key = models.CharField(max_length=40, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        if self.user:
+            return f"Cart for {self.user.username}"
+        return f"Anonymous Cart ({self.session_key})"
+    
+    def get_total(self):
+        return sum(item.get_total() for item in self.items.all())
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    # Student information for this specific item
+    student_name = models.CharField(max_length=255, null=True, blank=True)
+    student_age = models.PositiveIntegerField(help_text="Age in years", null=True, blank=True)
+    student_grade = models.CharField(max_length=50, help_text="Grade/Class", null=True, blank=True)
+    student_gender = models.CharField(max_length=10, choices=(('male', 'Male'), ('female', 'Female'), ('other', 'Other')), null=True, blank=True)
+    student_height = models.DecimalField(max_digits=5, decimal_places=1, help_text="Height in cm", null=True, blank=True)
+    # Measurements for this specific item
+    measurements = models.JSONField(default=dict, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.quantity} x {self.product} for {self.student_name or 'Unknown Student'}"
+    
+    def get_total(self):
+        return self.product.price * self.quantity if self.product.price else 0
+
 class Order(models.Model):
     ORDER_STATUS = (
         ('pending', 'Pending'),
@@ -60,6 +93,8 @@ class Order(models.Model):
     customer_email = models.EmailField(blank=True, null=True)
     
     # Student information - made all fields nullable
+    # Note: We are moving student information to the OrderLine level, so these might be deprecated.
+    # But we keep them for backward compatibility or for orders with a single student.
     student_name = models.CharField(max_length=255, null=True, blank=True)
     student_age = models.PositiveIntegerField(help_text="Age in years", null=True, blank=True)
     student_grade = models.CharField(max_length=50, help_text="Grade/Class", null=True, blank=True)
@@ -98,6 +133,13 @@ class OrderLine(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)  
     quantity = models.PositiveIntegerField(null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Student information for this line item
+    student_name = models.CharField(max_length=255, null=True, blank=True)
+    student_age = models.PositiveIntegerField(help_text="Age in years", null=True, blank=True)
+    student_grade = models.CharField(max_length=50, help_text="Grade/Class", null=True, blank=True)
+    student_gender = models.CharField(max_length=10, choices=(('male', 'Male'), ('female', 'Female'), ('other', 'Other')), null=True, blank=True)
+    student_height = models.DecimalField(max_digits=5, decimal_places=1, help_text="Height in cm", null=True, blank=True)
     
     # Measurements stored as JSON for flexibility based on garment type
     measurements = models.JSONField(default=dict, null=True, blank=True)
