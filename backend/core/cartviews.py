@@ -1,4 +1,5 @@
-from rest_framework import generics, status
+# core/cartviews.py
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from django.utils.crypto import get_random_string
 from .models import Cart, CartItem
@@ -6,19 +7,22 @@ from .serializers import CartSerializer, CartItemSerializer
 
 class CartView(generics.RetrieveAPIView):
     serializer_class = CartSerializer
+    permission_classes = [permissions.AllowAny]  # Allow anonymous users
     
     def get_object(self):
-        # Get or create cart based on session or user
+        # Get or create cart based on session
         session_key = self.request.session.session_key
         if not session_key:
             self.request.session.create()
             session_key = self.request.session.session_key
+            self.request.session.modified = True
         
         cart, created = Cart.objects.get_or_create(session_key=session_key)
         return cart
 
 class AddToCartView(generics.CreateAPIView):
     serializer_class = CartItemSerializer
+    permission_classes = [permissions.AllowAny]  # Allow anonymous users
     
     def create(self, request, *args, **kwargs):
         # Get or create cart
@@ -26,6 +30,7 @@ class AddToCartView(generics.CreateAPIView):
         if not session_key:
             request.session.create()
             session_key = request.session.session_key
+            request.session.modified = True
         
         cart, created = Cart.objects.get_or_create(session_key=session_key)
         
@@ -57,6 +62,7 @@ class AddToCartView(generics.CreateAPIView):
 class UpdateCartItemView(generics.UpdateAPIView):
     queryset = CartItem.objects.all()
     serializer_class = CartItemSerializer
+    permission_classes = [permissions.AllowAny]  # Allow anonymous users
     
     def update(self, request, *args, **kwargs):
         # Verify the cart item belongs to the user's cart
@@ -73,6 +79,7 @@ class UpdateCartItemView(generics.UpdateAPIView):
 
 class RemoveFromCartView(generics.DestroyAPIView):
     queryset = CartItem.objects.all()
+    permission_classes = [permissions.AllowAny]  # Allow anonymous users
     
     def destroy(self, request, *args, **kwargs):
         # Verify the cart item belongs to the user's cart

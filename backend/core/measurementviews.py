@@ -1,10 +1,11 @@
 # core/measurementviews.py
-from rest_framework import generics
+from rest_framework import generics, permissions
 from rest_framework.response import Response
 from .models import Product
-from django.http import JsonResponse
 
 class MeasurementTemplateView(generics.RetrieveAPIView):
+    permission_classes = [permissions.AllowAny]  # Allow unauthenticated access
+    
     def get(self, request, *args, **kwargs):
         product_id = request.GET.get('product_id')
         

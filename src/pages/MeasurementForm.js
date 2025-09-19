@@ -15,11 +15,11 @@ const MeasurementForm = () => {
   const [template, setTemplate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    studentName: '',
-    studentAge: '',
-    studentGrade: '',
-    studentGender: '',
-    studentHeight: '',
+    student_name: '',
+    student_age: '',
+    student_grade: '',
+    student_gender: '',
+    student_height: '',
     measurements: {}
   });
 
@@ -71,18 +71,16 @@ const MeasurementForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Add item to cart with measurements
+      // Add item to cart with measurements - match backend structure
       await cartAPI.addItem({
-        product: productId,
+        product: parseInt(productId),
         quantity: 1,
-        measurements: formData.measurements,
-        student_info: {
-          name: formData.studentName,
-          age: formData.studentAge,
-          grade: formData.studentGrade,
-          gender: formData.studentGender,
-          height: formData.studentHeight
-        }
+        student_name: formData.student_name,
+        student_age: parseInt(formData.student_age),
+        student_grade: formData.student_grade,
+        student_gender: formData.student_gender,
+        student_height: parseFloat(formData.student_height),
+        measurements: formData.measurements
       });
       
       // Redirect to cart page
@@ -101,7 +99,6 @@ const MeasurementForm = () => {
 
   return (
     <div className="App">
-      <Header />
       <main className="main-content">
         <div className="measurement-page">
           <div className="measurement-container">
@@ -116,8 +113,8 @@ const MeasurementForm = () => {
                     <label>Student Name</label>
                     <input
                       type="text"
-                      name="studentName"
-                      value={formData.studentName}
+                      name="student_name"
+                      value={formData.student_name}
                       onChange={handleInputChange}
                       required
                     />
@@ -127,8 +124,8 @@ const MeasurementForm = () => {
                     <label>Age</label>
                     <input
                       type="number"
-                      name="studentAge"
-                      value={formData.studentAge}
+                      name="student_age"
+                      value={formData.student_age}
                       onChange={handleInputChange}
                       required
                     />
@@ -140,8 +137,8 @@ const MeasurementForm = () => {
                     <label>Grade/Class</label>
                     <input
                       type="text"
-                      name="studentGrade"
-                      value={formData.studentGrade}
+                      name="student_grade"
+                      value={formData.student_grade}
                       onChange={handleInputChange}
                       required
                     />
@@ -150,8 +147,8 @@ const MeasurementForm = () => {
                   <div className="form-group">
                     <label>Gender</label>
                     <select
-                      name="studentGender"
-                      value={formData.studentGender}
+                      name="student_gender"
+                      value={formData.student_gender}
                       onChange={handleInputChange}
                       required
                     >
@@ -167,9 +164,10 @@ const MeasurementForm = () => {
                   <label>Height (cm)</label>
                   <input
                     type="number"
-                    name="studentHeight"
-                    value={formData.studentHeight}
+                    name="student_height"
+                    value={formData.student_height}
                     onChange={handleInputChange}
+                    step="0.1"
                     required
                   />
                 </div>
@@ -206,7 +204,6 @@ const MeasurementForm = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };
