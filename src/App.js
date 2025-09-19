@@ -1,4 +1,4 @@
-// src/App.js - Fixed version
+// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -15,7 +15,9 @@ import Admin from './pages/Admin';
 import Terms from './pages/Terms';
 import { CartProvider } from './context/CartContext';
 import OrderNow from './pages/OrderNow';
-import Products from './pages/Products'; // Added missing import
+import Products from './pages/Products';
+import MeasurementForm from './pages/MeasurementForm';
+
 
 function App() {
   return (
@@ -37,6 +39,8 @@ function App() {
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/order-now" element={<OrderNow />} />
+                <Route path="/measurement/:productId" element={<MeasurementForm />} />
+                
               </Routes>
             </main>
             <Footer />

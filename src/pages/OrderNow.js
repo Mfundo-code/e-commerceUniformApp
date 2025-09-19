@@ -1,51 +1,50 @@
 // src/pages/OrderNow.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { schoolsAPI, productsAPI, cartAPI } from '../services/api';
+import { schoolsAPI, productsAPI } from '../services/api';
 import ImageHolder from '../components/ImageHolder';
-import MeasurementForm from '../components/MeasurementForm';
 import './OrderNow.css';
 
 const findClosestSchool = (schools, query) => {
   if (!query || !schools.length) return null;
-  
+
   const normalizedQuery = query.toLowerCase().trim();
-  
+
   // Try exact match first
   const exactMatch = schools.find(school => 
     school.name.toLowerCase() === normalizedQuery
   );
   if (exactMatch) return exactMatch;
-  
+
   // Try partial match
   const partialMatch = schools.find(school => 
     school.name.toLowerCase().includes(normalizedQuery)
   );
   if (partialMatch) return partialMatch;
-  
+
   // Fuzzy match with simple distance algorithm
   const results = schools.map(school => {
     const name = school.name.toLowerCase();
     let distance = 0;
     let matches = 0;
-    
+
     // Calculate character matches
     const queryChars = normalizedQuery.split('');
     const nameChars = name.split('');
-    
+
     queryChars.forEach(char => {
       if (nameChars.includes(char)) matches++;
     });
-    
+
     distance = Math.max(normalizedQuery.length, name.length) - matches;
-    
+
     return {
       school,
       distance,
       similarity: matches / Math.max(normalizedQuery.length, name.length)
     };
   });
-  
+
   // Find best match with highest similarity
   const bestMatch = results.sort((a, b) => b.similarity - a.similarity)[0];
   return bestMatch.similarity >= 0.4 ? bestMatch.school : null;
@@ -56,8 +55,6 @@ const OrderNow = () => {
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [products, setProducts] = useState([]);
   const [schoolName, setSchoolName] = useState('');
-  const [showMeasurementForm, setShowMeasurementForm] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [schoolError, setSchoolError] = useState('');
   const [suggestedSchool, setSuggestedSchool] = useState(null);
@@ -83,7 +80,7 @@ const OrderNow = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       if (!selectedSchool) return;
-      
+
       try {
         setLoading(true);
         const data = await productsAPI.getBySchool(selectedSchool.id);
@@ -106,26 +103,26 @@ const OrderNow = () => {
       setSchoolError('Please enter a school name');
       return;
     }
-    
+
     setLoading(true);
     setSchoolError('');
     setSuggestedSchool(null);
-    
+
     try {
       // Find closest school match using fuzzy search
       const closestSchool = findClosestSchool(schools, schoolName);
-      
+
       if (!closestSchool) {
         setSchoolError('School not found. Please request assistance or try another name.');
         setProducts([]);
         setLoading(false);
         return;
       }
-      
+
       // Check if we need to confirm with user
       const normalizedInput = schoolName.toLowerCase().trim();
       const normalizedSchool = closestSchool.name.toLowerCase();
-      
+
       if (!normalizedSchool.includes(normalizedInput)) {
         setSuggestedSchool(closestSchool);
         setSchoolError(`Did you mean ${closestSchool.name}?`);
@@ -133,58 +130,32 @@ const OrderNow = () => {
         setLoading(false);
         return;
       }
-      
+
       // Set the selected school
       setSelectedSchool(closestSchool);
     } catch (error) {
       console.error('Error finding school:', error);
       setSchoolError('Failed to find school. Please try again.');
     }
-    
+
     setLoading(false);
   };
 
   const handleUseSuggestion = async () => {
     if (!suggestedSchool) return;
-    
+
     setSelectedSchool(suggestedSchool);
     setSchoolName(suggestedSchool.name);
     setSuggestedSchool(null);
     setSchoolError('');
   };
 
-  const handleProductSelect = (product) => {
-    setSelectedProduct(product);
-    setShowMeasurementForm(true);
-  };
-
-  const handleAddToCart = async (formData) => {
-    try {
-      await cartAPI.addItem({
-        product: selectedProduct.id,
-        quantity: 1,
-        student_name: formData.studentName,
-        student_age: formData.studentAge,
-        student_grade: formData.studentGrade,
-        student_gender: formData.studentGender,
-        student_height: formData.studentHeight,
-        measurements: formData.measurements
-      });
-
-      setShowMeasurementForm(false);
-      alert('Item added to cart successfully!');
-      navigate('/cart');
-    } catch (error) {
-      setSchoolError('Failed to add item to cart');
-      console.error('Error adding to cart:', error);
-    }
-  };
 
   return (
     <div className="order-now-page">
       <div className="container">
         <h2>School Uniforms</h2>
-        
+
         {!selectedSchool ? (
           <div className="school-selection">
             <div className="search-container">
@@ -204,11 +175,11 @@ const OrderNow = () => {
                 {loading ? 'Searching...' : 'Find Uniforms'}
               </button>
             </div>
-            
+
             {schoolError && (
               <div className="error-container">
                 <p className="error-text">{schoolError}</p>
-                
+
                 {suggestedSchool && (
                   <button 
                     className="suggestion-button"
@@ -217,7 +188,7 @@ const OrderNow = () => {
                     Yes, show {suggestedSchool.name} uniforms
                   </button>
                 )}
-                
+
                 <div className="action-buttons">
                   <button 
                     className="assistance-button"
@@ -234,7 +205,7 @@ const OrderNow = () => {
                 </div>
               </div>
             )}
-            
+
             {loading && (
               <div className="loading-container">
                 <i className="fas fa-spinner fa-spin spinner"></i>
@@ -257,16 +228,15 @@ const OrderNow = () => {
                 Change School
               </button>
             </div>
-            
+
             {loading && <div className="loading">Loading products...</div>}
-            
+
             <div className="products-grid">
               {products.length > 0 ? (
                 products.map(product => (
                   <div key={product.id} className="product-item">
                     <ImageHolder 
                       product={product} 
-                      onOrder={() => handleProductSelect(product)}
                     />
                   </div>
                 ))
@@ -275,14 +245,6 @@ const OrderNow = () => {
               )}
             </div>
           </div>
-        )}
-        
-        {showMeasurementForm && selectedProduct && (
-          <MeasurementForm
-            product={selectedProduct}
-            onSubmit={handleAddToCart}
-            onCancel={() => setShowMeasurementForm(false)}
-          />
         )}
       </div>
     </div>

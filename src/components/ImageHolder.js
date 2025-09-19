@@ -1,12 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const ImageHolder = ({ product, onOrder }) => {
+const ImageHolder = ({ product }) => {
   const navigate = useNavigate();
 
   const handleOrderClick = () => {
-    // Navigate directly to communication screen
-    navigate('/communication');
+    // Navigate directly to measurement form with product info
+    navigate(`/measurement/${product.id}`, { state: { product } });
   };
 
   return (
