@@ -2,6 +2,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
+from django.utils.html import format_html
 from .models import (
     School, Product, Cart, CartItem, Order, OrderLine, 
     TailorProfile, DeliveryPartnerProfile, Shipment, Payment
@@ -33,13 +34,20 @@ class SchoolAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'province', 'created_at')
     search_fields = ('name', 'town', 'province')
     list_editable = ('is_active',)
+    readonly_fields = ('created_at',)
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('school', 'garment_type', 'price', 'created_at')
+    list_display = ('school', 'garment_type', 'price', 'image_preview', 'created_at')
     list_filter = ('school', 'garment_type', 'created_at')
-    search_fields = ('school__name', 'garment_type')
-    readonly_fields = ('created_at',)
+    search_fields = ('school__name', 'garment_type', 'description')
+    readonly_fields = ('created_at', 'image_preview')
+    
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" width="50" height="50" style="object-fit: cover;" />', obj.image.url)
+        return "No Image"
+    image_preview.short_description = 'Image Preview'
 
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):

@@ -1,197 +1,191 @@
-// src/pages/Home.js (updated)
+// src/pages/Home.js
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { productsAPI, schoolsAPI } from '../services/api';
+import ImageHolder from '../components/ImageHolder';
+import { productsAPI } from '../services/api';
 import './Home.css';
 
+const ITEMS_PER_SLIDE = 4;
+const MAX_FEATURED = 12; // keep up to 12 random items
+const SLIDE_INTERVAL_MS = 5000;
+
+const shuffleArray = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+const chunk = (arr, size) => {
+  const res = [];
+  for (let i = 0; i < arr.length; i += size) res.push(arr.slice(i, i + size));
+  return res;
+};
+
 const Home = () => {
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const navigate = useNavigate();
+  const [featured, setFeatured] = useState([]);
+  const [slides, setSlides] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const slideInterval = useRef(null);
-  const carouselRef = useRef(null);
-  const navigate = useNavigate();
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    fetchData();
-    
-    // Set up auto-rotation for the carousel
-    slideInterval.current = setInterval(() => {
-      const slides = Math.max(1, Math.ceil(featuredProducts.length / 4));
-      setCurrentSlide(prev => (prev + 1) % slides);
-    }, 5000);
-    
-    return () => clearInterval(slideInterval.current);
-  }, [featuredProducts.length]);
+    isMounted.current = true;
+    fetchAndPrepare();
+    return () => {
+      isMounted.current = false;
+      clearInterval(slideInterval.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    // whenever featured changes, rebuild slides and restart autoplay
+    const s = chunk(featured, ITEMS_PER_SLIDE);
+    setSlides(s);
+    setCurrentSlide(0);
+    restartAutoplay(s.length);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [featured]);
+
+  const restartAutoplay = (slidesCount) => {
+    clearInterval(slideInterval.current);
+    if (!slidesCount || slidesCount <= 1) return;
+    slideInterval.current = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % slidesCount);
+    }, SLIDE_INTERVAL_MS);
+  };
+
+  const fetchAndPrepare = async () => {
     try {
       setIsLoading(true);
-      
-      // Fetch all schools to get products
-      const schoolsData = await schoolsAPI.getAll();
-      
-      // Fetch all products from all schools
-      const allProducts = [];
-      for (const school of schoolsData) {
+      let res = [];
+
+      if (productsAPI && typeof productsAPI.getFeatured === 'function') {
+        res = await productsAPI.getFeatured();
+      } else if (productsAPI && typeof productsAPI.getAll === 'function') {
+        res = await productsAPI.getAll();
+      } else if (productsAPI && typeof productsAPI.getBySchool === 'function') {
+        // best-effort fallback — try a couple of likely school ids
         try {
-          const products = await productsAPI.getBySchool(school.id);
-          // enrich with school info if necessary
-          const enriched = products.map(p => ({ ...p, school_name: school.name, school: school.id }));
-          allProducts.push(...enriched);
-        } catch (error) {
-          console.error(`Error fetching products for school ${school.id}:`, error);
+          const s1 = await productsAPI.getBySchool(1);
+          res = Array.isArray(s1) ? s1 : (s1 && s1.data ? s1.data : []);
+        } catch (e) {
+          res = [];
         }
       }
-      
-      // Shuffle and select 12 random products for the carousel
-      const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
-      setFeaturedProducts(shuffled.slice(0, 12));
-      
+
+      const items = Array.isArray(res) ? res : (res && res.data ? res.data : []);
+      const shuffled = shuffleArray(items).slice(0, MAX_FEATURED);
+      if (isMounted.current) setFeatured(shuffled);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching featured products:', error);
+      if (isMounted.current) setFeatured([]);
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) setIsLoading(false);
     }
   };
 
-  const handleProductSelect = (product) => {
-    // Navigate to product listing for that school
-    navigate(`/schools/${product.school}/products`);
+  const handlePrev = () => {
+    clearInterval(slideInterval.current);
+    setCurrentSlide(prev => (prev === 0 ? Math.max(0, slides.length - 1) : prev - 1));
+    restartAutoplay(slides.length);
   };
 
-  const handleBuyNowClick = () => {
-    // Navigate to the order now page
-    navigate('/order-now');
+  const handleNext = () => {
+    clearInterval(slideInterval.current);
+    setCurrentSlide(prev => (prev + 1) % Math.max(1, slides.length));
+    restartAutoplay(slides.length);
   };
 
-  // When a user clicks the small Order Now button on a product card
-  const handleOrderNowClick = (product, e) => {
-    // stop the parent card click
-    if (e && e.stopPropagation) e.stopPropagation();
-    // pass selectedSchool and product via location state so OrderNow can prefill if desired
-    navigate('/order-now', { state: { selectedSchool: { id: product.school, name: product.school_name }, product } });
+  const goToSlide = (index) => {
+    clearInterval(slideInterval.current);
+    setCurrentSlide(index);
+    restartAutoplay(slides.length);
   };
 
-  const renderProductSlide = () => {
-    if (isLoading) {
-      return (
-        <div className="loading-slide">
-          <div className="spinner"></div>
-          <p>Loading featured products...</p>
-        </div>
-      );
-    }
-    
-    if (featuredProducts.length === 0) {
-      return (
-        <div className="empty-slide">
-          <p>No products available at the moment.</p>
-        </div>
-      );
-    }
-    
-    const startIdx = currentSlide * 4;
-    const slideProducts = featuredProducts.slice(startIdx, startIdx + 4);
-    
-    return (
-      <div className="products-slide">
-        {slideProducts.map(product => (
-          <div 
-            key={product.id} 
-            className="product-card"
-            onClick={() => handleProductSelect(product)}
-          >
-            {product.image ? (
-              <img 
-                src={product.image} 
-                alt={product.description} 
-                className="product-image"
-              />
-            ) : (
-              <div className="product-image-placeholder">
-                <i className="fas fa-image"></i>
-              </div>
-            )}
-            <div className="product-info">
-              <h4>{product.garment_type_display}</h4>
-              <p className="school-name">{product.school_name}</p>
-              <p className="price">${product.price}</p>
-            </div>
-            <button 
-              className="order-btn"
-              onClick={(e) => handleOrderNowClick(product, e)}
-            >
-              Order Now
-            </button>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  const handleBuyNowClick = () => navigate('/order-now');
 
   return (
     <div className="home">
-      {/* Hero Section */}
       <div className="hero">
         <div className="hero-content">
           <h1>Welcome to School Uniforms</h1>
           <p>Quality uniforms tailored for your school</p>
-          {/* Buy Now button that navigates to order page */}
           <button className="order-now-btn" onClick={handleBuyNowClick}>
             Order Now <i className="fas fa-arrow-right"></i>
           </button>
         </div>
       </div>
-      
-      {/* Featured Products Carousel */}
+
       <section className="featured-products">
         <h2>Featured Uniforms</h2>
-        <div className="carousel-container">
-          <div className="carousel" ref={carouselRef}>
-            {renderProductSlide()}
-          </div>
-          
-          {/* Carousel Controls */}
-          <div className="carousel-controls">
-            <button 
-              className="control-btn"
-              onClick={() => {
-                clearInterval(slideInterval.current);
-                const slides = Math.max(1, Math.ceil(featuredProducts.length / 4));
-                setCurrentSlide(prev => (prev === 0 ? slides - 1 : prev - 1));
-              }}
-            >
-              <i className="fas fa-chevron-left"></i>
-            </button>
-            
-            <div className="carousel-dots">
-              {Array.from({ length: Math.max(1, Math.ceil(featuredProducts.length / 4)) }).map((_, index) => (
-                <button
-                  key={index}
-                  className={`dot ${index === currentSlide ? 'active' : ''}`}
-                  onClick={() => {
-                    clearInterval(slideInterval.current);
-                    setCurrentSlide(index);
+
+        <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative' }}>
+          {isLoading ? (
+            <div style={{ padding: 40, textAlign: 'center' }}>Loading products…</div>
+          ) : slides.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center' }}>No products available.</div>
+          ) : (
+            <>
+              {/* Carousel viewport */}
+              <div style={{ overflow: 'hidden' }}>
+                <div
+                  className="slides"
+                  style={{
+                    display: 'flex',
+                    transition: 'transform 0.6s ease',
+                    transform: `translateX(-${currentSlide * 100}%)`
                   }}
-                />
-              ))}
-            </div>
-            
-            <button 
-              className="control-btn"
-              onClick={() => {
-                clearInterval(slideInterval.current);
-                const slides = Math.max(1, Math.ceil(featuredProducts.length / 4));
-                setCurrentSlide(prev => (prev + 1) % slides);
-              }}
-            >
-              <i className="fas fa-chevron-right"></i>
-            </button>
-          </div>
+                >
+                  {slides.map((slideItems, idx) => (
+                    <div key={idx} style={{ flex: '0 0 100%', padding: 16 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+                        {slideItems.map((p) => (
+                          <ImageHolder key={p.id || p.product_id || p.slug} product={p} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Controls */}
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginTop: 18 }}>
+                <button onClick={handlePrev} className="control-btn" aria-label="Previous slide">
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {slides.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => goToSlide(i)}
+                      aria-label={`Go to slide ${i + 1}`}
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: '50%',
+                        border: 'none',
+                        background: i === currentSlide ? '#224abe' : '#ddd',
+                        cursor: 'pointer'
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <button onClick={handleNext} className="control-btn" aria-label="Next slide">
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </section>
-
     </div>
   );
 };
