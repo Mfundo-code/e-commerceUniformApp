@@ -65,7 +65,6 @@ class GuestCheckoutView(generics.CreateAPIView):
                 product=cart_item.product,
                 quantity=cart_item.quantity,
                 price=cart_item.product.price,
-                measurements=cart_item.measurements,
                 # Add student information to order line
                 student_name=cart_item.student_name,
                 student_age=cart_item.student_age,
@@ -146,7 +145,6 @@ class PaymentSuccessView(generics.UpdateAPIView):
                 order.save()
                 
                 # Create payment record
-                from .models import Payment
                 Payment.objects.create(
                     order=order,
                     amount=order.total_amount,
@@ -197,21 +195,17 @@ class PaymentSuccessView(generics.UpdateAPIView):
             # In a real implementation, you would use geolocation to find the closest one
             tailor = tailors.first()
             
-          
             confirmation_token = order.generate_confirmation_token()
             
             order.set_deadline()
             
-     
             self.send_tailor_notification(order, tailor, confirmation_token)
             
-           
             order.tailor = tailor.user
             order.assigned_at = timezone.now()
             order.save()
             
         else:
-            
             pass
     
     def send_tailor_notification(self, order, tailor, confirmation_token):

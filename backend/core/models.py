@@ -65,8 +65,8 @@ class CartItem(models.Model):
     student_grade = models.CharField(max_length=50, help_text="Grade/Class", null=True, blank=True)
     student_gender = models.CharField(max_length=10, choices=(('male', 'Male'), ('female', 'Female'), ('other', 'Other')), null=True, blank=True)
     student_height = models.DecimalField(max_digits=5, decimal_places=1, help_text="Height in cm", null=True, blank=True)
-    # Measurements for this specific item
-    measurements = models.JSONField(default=dict, null=True, blank=True)
+    # Measurement fields
+    measurements = models.JSONField(null=True, blank=True, help_text="Body measurements in cm")
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -141,67 +141,8 @@ class OrderLine(models.Model):
     student_gender = models.CharField(max_length=10, choices=(('male', 'Male'), ('female', 'Female'), ('other', 'Other')), null=True, blank=True)
     student_height = models.DecimalField(max_digits=5, decimal_places=1, help_text="Height in cm", null=True, blank=True)
     
-    # Measurements stored as JSON for flexibility based on garment type
-    measurements = models.JSONField(default=dict, null=True, blank=True)
-    
     def __str__(self):
         return f"{self.product.school.name if self.product and self.product.school else 'No Product'} - {self.product.get_garment_type_display() if self.product else 'No Type'} - Qty: {self.quantity}"
-
-    def get_measurement_fields(self):
-        """Return the appropriate measurement fields based on garment type"""
-        if not self.product or not self.product.garment_type:
-            return []
-            
-        garment_type = self.product.garment_type
-        
-        measurement_fields = {
-            'shirt_blouse': [
-                'neck_circumference', 'chest_bust_circumference', 'waist_circumference',
-                'shoulder_width', 'sleeve_length', 'armhole', 'biceps_circumference',
-                'wrist_circumference', 'shirt_length_back', 'shirt_length_front',
-                'chest_to_waist'
-            ],
-            'polo_tshirt': [
-                'chest_circumference', 'waist_circumference', 'shoulder_width',
-                'sleeve_length', 'shirt_length'
-            ],
-            'trousers_pants': [
-                'waist_circumference', 'hip_circumference', 'front_rise', 'back_rise',
-                'inseam_length', 'outseam_length', 'thigh_circumference',
-                'knee_circumference', 'ankle_circumference', 'waist_to_knee',
-                'preferred_hem_allowance'
-            ],
-            'skirt': [
-                'waist_circumference', 'hip_circumference', 'skirt_length_front',
-                'skirt_length_back', 'waist_to_hip', 'hem_width',
-                'preferred_pleat_count', 'pleat_depth'
-            ],
-            'shorts': [
-                'waist_circumference', 'hip_circumference', 'inseam_length',
-                'outseam_length', 'thigh_circumference'
-            ],
-            'pinafore': [
-                'bust_circumference', 'waist_circumference', 'hip_circumference',
-                'dress_length_front', 'shoulder_to_waist', 'shoulder_width',
-                'armhole', 'back_width'
-            ],
-            'blazer': [
-                'chest_circumference', 'shoulder_width', 'sleeve_length',
-                'jacket_length_back', 'waist_circumference', 'bicep_circumference',
-                'collar_to_front'
-            ],
-            'pe_kit': [
-                'chest_circumference', 'waist_circumference', 'shoulder_width',
-                'sleeve_length', 'length', 'hip_circumference', 'inseam', 'outseam',
-                'thigh_circumference'
-            ],
-            'accessory': [
-                'tie_length', 'belt_waist_size'
-            ]
-        }
-        
-        return measurement_fields.get(garment_type, [])
-
 
 class TailorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -230,7 +171,6 @@ class TailorProfile(models.Model):
         self.email_verification_code = code
         self.save()
         return code
-
 
 class DeliveryPartnerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

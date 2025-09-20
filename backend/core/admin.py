@@ -1,4 +1,3 @@
-# core/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
@@ -61,13 +60,13 @@ class CartItemAdmin(admin.ModelAdmin):
     list_display = ('cart', 'product', 'quantity', 'student_name', 'created_at')
     list_filter = ('created_at', 'student_gender')
     search_fields = ('cart__session_key', 'student_name', 'product__school__name')
-    readonly_fields = ('created_at', 'formatted_measurements')
+    readonly_fields = ('created_at', 'measurements_preview')
     
-    def formatted_measurements(self, obj):
+    def measurements_preview(self, obj):
         if obj.measurements:
-            return json.dumps(obj.measurements, indent=2)
-        return "No measurements provided"
-    formatted_measurements.short_description = 'Measurements (JSON)'
+            return format_html('<pre>{}</pre>', json.dumps(obj.measurements, indent=2))
+        return "No measurements"
+    measurements_preview.short_description = 'Measurements'
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
@@ -101,13 +100,6 @@ class OrderLineAdmin(admin.ModelAdmin):
     list_display = ('order', 'product', 'quantity', 'student_name')
     list_filter = ('product__garment_type',)
     search_fields = ('order__order_code', 'product__school__name', 'student_name')
-    readonly_fields = ('formatted_measurements',)
-    
-    def formatted_measurements(self, obj):
-        if obj.measurements:
-            return json.dumps(obj.measurements, indent=2)
-        return "No measurements provided"
-    formatted_measurements.short_description = 'Measurements (JSON)'
 
 @admin.register(TailorProfile)
 class TailorProfileAdmin(admin.ModelAdmin):

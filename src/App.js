@@ -15,7 +15,6 @@ import Admin from './pages/Admin';
 import Terms from './pages/Terms';
 import { CartProvider } from './context/CartContext';
 import OrderNow from './pages/OrderNow';
-import Products from './pages/Products';
 import MeasurementForm from './pages/MeasurementForm';
 
 
@@ -30,7 +29,6 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/schools" element={<Schools />} />
-                <Route path="/schools/:schoolId/products" element={<Products />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-tracking" element={<OrderTracking />} />

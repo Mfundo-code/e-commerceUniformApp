@@ -1,4 +1,3 @@
-# core/cartviews.py
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from django.utils.crypto import get_random_string
@@ -34,9 +33,8 @@ class AddToCartView(generics.CreateAPIView):
         
         cart, created = Cart.objects.get_or_create(session_key=session_key)
         
-        # Add item to cart
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        # Add cart to request data
+        request.data['cart'] = cart.id
         
         # Check if similar item already exists in cart
         product_id = request.data.get('product')
@@ -51,13 +49,38 @@ class AddToCartView(generics.CreateAPIView):
         if existing_item:
             # Update quantity if item exists
             existing_item.quantity += int(request.data.get('quantity', 1))
+            
+            # Update measurements if provided
+            measurement_fields = [
+                'bust_chest', 'waist', 'hips', 'shoulder_width', 'sleeve_length',
+                'front_length', 'back_length', 'inseam', 'outseam', 'thigh', 'knee',
+                'neck', 'shirt_length', 'skirt_length', 'dress_length'
+            ]
+            
+            measurements = {}
+            for field in measurement_fields:
+                if field in request.data and request.data[field] not in [None, '']:
+                    # Convert to float for JSON serialization
+                    try:
+                        measurements[field] = float(request.data[field])
+                    except (ValueError, TypeError):
+                        pass
+            
+            if measurements:
+                if existing_item.measurements:
+                    existing_item.measurements.update(measurements)
+                else:
+                    existing_item.measurements = measurements
+            
             existing_item.save()
             serializer = self.get_serializer(existing_item)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             # Create new item
-            serializer.save(cart=cart)
-        
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class UpdateCartItemView(generics.UpdateAPIView):
     queryset = CartItem.objects.all()

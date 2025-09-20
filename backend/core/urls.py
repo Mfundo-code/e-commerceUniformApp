@@ -1,5 +1,5 @@
 from django.urls import path
-from . import userviews, tailorviews, deliveryviews, paymentviews, orderviews, schoolsviews, productsviews, measurementviews, cartviews
+from . import userviews, tailorviews, deliveryviews, paymentviews, orderviews, schoolsviews, productsviews, cartviews
 
 urlpatterns = [
     # Authentication
@@ -16,7 +16,6 @@ urlpatterns = [
     path('schools/<int:school_id>/products/', productsviews.ProductListView.as_view(), name='school-products'),
     path('checkout/guest/', orderviews.GuestCheckoutView.as_view(), name='guest-checkout'),
     path('orders/<str:order_code>/', orderviews.OrderLookupView.as_view(), name='order-lookup'),
-    path('measurements/template/', measurementviews.MeasurementTemplateView.as_view(), name='measurement-template'),
     path('tailor/confirm-order/<str:confirmation_token>/', orderviews.TailorOrderConfirmationView.as_view(), name='tailor-confirm-order'),
     
     # Payment endpoints

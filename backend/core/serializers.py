@@ -43,14 +43,7 @@ class OrderSerializer(serializers.ModelSerializer):
 class OrderLineCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderLine
-        fields = ('product', 'quantity', 'price', 'measurements', 'student_name', 'student_age', 'student_grade', 'student_gender', 'student_height')
-    
-    def validate_measurements(self, value):
-        # You could add validation here based on the product's garment type
-        # For now, we'll just ensure it's a dictionary
-        if not isinstance(value, dict):
-            raise serializers.ValidationError("Measurements must be a JSON object.")
-        return value
+        fields = ('product', 'quantity', 'price', 'student_name', 'student_age', 'student_grade', 'student_gender', 'student_height')
 
 class OrderCreateSerializer(serializers.ModelSerializer):
     lines = OrderLineCreateSerializer(many=True)
@@ -76,12 +69,83 @@ class CartItemSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(source='product.price', read_only=True, max_digits=10, decimal_places=2)
     total = serializers.SerializerMethodField()
     
+    # Add fields for all possible measurements as FloatField
+    bust_chest = serializers.FloatField(required=False, allow_null=True)
+    waist = serializers.FloatField(required=False, allow_null=True)
+    hips = serializers.FloatField(required=False, allow_null=True)
+    shoulder_width = serializers.FloatField(required=False, allow_null=True)
+    sleeve_length = serializers.FloatField(required=False, allow_null=True)
+    front_length = serializers.FloatField(required=False, allow_null=True)
+    back_length = serializers.FloatField(required=False, allow_null=True)
+    inseam = serializers.FloatField(required=False, allow_null=True)
+    outseam = serializers.FloatField(required=False, allow_null=True)
+    thigh = serializers.FloatField(required=False, allow_null=True)
+    knee = serializers.FloatField(required=False, allow_null=True)
+    neck = serializers.FloatField(required=False, allow_null=True)
+    shirt_length = serializers.FloatField(required=False, allow_null=True)
+    skirt_length = serializers.FloatField(required=False, allow_null=True)
+    dress_length = serializers.FloatField(required=False, allow_null=True)
+    
     class Meta:
         model = CartItem
         fields = '__all__'
     
     def get_total(self, obj):
         return obj.get_total()
+    
+    def create(self, validated_data):
+        # Extract measurement fields from validated_data
+        measurement_fields = [
+            'bust_chest', 'waist', 'hips', 'shoulder_width', 'sleeve_length',
+            'front_length', 'back_length', 'inseam', 'outseam', 'thigh', 'knee',
+            'neck', 'shirt_length', 'skirt_length', 'dress_length'
+        ]
+        
+        measurements = {}
+        for field in measurement_fields:
+            if field in validated_data:
+                # Convert to float for JSON serialization
+                value = validated_data.pop(field)
+                if value is not None:
+                    measurements[field] = float(value)
+        
+        # Create the cart item with measurements
+        cart_item = CartItem.objects.create(**validated_data)
+        if measurements:
+            cart_item.measurements = measurements
+            cart_item.save()
+        
+        return cart_item
+    
+    def update(self, instance, validated_data):
+        # Extract measurement fields from validated_data
+        measurement_fields = [
+            'bust_chest', 'waist', 'hips', 'shoulder_width', 'sleeve_length',
+            'front_length', 'back_length', 'inseam', 'outseam', 'thigh', 'knee',
+            'neck', 'shirt_length', 'skirt_length', 'dress_length'
+        ]
+        
+        measurements = {}
+        for field in measurement_fields:
+            if field in validated_data:
+                # Convert to float for JSON serialization
+                value = validated_data.pop(field)
+                if value is not None:
+                    measurements[field] = float(value)
+        
+        # Update the cart item
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        # Update measurements if provided
+        if measurements:
+            if instance.measurements:
+                instance.measurements.update(measurements)
+            else:
+                instance.measurements = measurements
+        
+        instance.save()
+        return instance
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
